@@ -1,0 +1,17 @@
+1) Register (Auth فقط)
+2) Login → JWT
+3) Subscribe to Plan (بعد login)
+    
+4) Use system
+
+
+
+1) POST /login
+      ↓
+2) GET /plans   ← عرض الباقات
+      ↓
+3) click plan (frontend only)
+      ↓
+4) POST /subscribe (planId)
+      ↓
+5) Create Subscription
