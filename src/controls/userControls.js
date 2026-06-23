@@ -1,5 +1,6 @@
 const Users = require('../models/userModel');
 const Plans = require('../models/planSubscription');
+const Subscribtion = require('../models/userSubscription');
 const bcrypt = require('bcryptjs');
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken');
@@ -72,7 +73,7 @@ const login = async (req, res, next) => {
         }
 
         const payload = { id: user._id, name: user.name, email: user.email };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         return res.status(200).json({ data: token });
     } catch (error) {
@@ -91,9 +92,74 @@ const plans = async (req, res, next) => {
     }
 }
 const subscribtion = async (req, res, next) => {
-    console.log(req.user);
+    const userId = req.user.id
+    const planId = req.body.planId
 
-    return res.status(200).json({ data: 'token' });
+    const oldSubscription = await Subscribtion.findOne({
+        userId: userId,
+        status: 'active'
+    })
+    if (oldSubscription) {
+        res.status(400)
+        return next('Already Subscribtion is Existing')
+    }
+    const plan = await Plans.findById(planId)
+    if (!plan || plan.isActive == 'false') {
+        res.status(400)
+        return next('Plan not Existing')
+    }
+    const user = await Users.findById(userId)
+    console.log(plan);
+
+    if (!plan || plan.isActive != true) {
+        res.status(400)
+        return next('Plan not Existing')
+    }
+
+    const startDate = new Date()
+    const endDate = new Date()
+
+    endDate.setDate(
+        startDate.getDate() + plan.durationInDays
+    )
+
+    const subscribtion = new Subscribtion({
+        userId: userId,
+        planId: plan._id,
+        status: 'active',
+        startDate,
+        endDate,
+    })
+
+    await subscribtion.save()
+
+    await sendEmail({
+        email: user.email,
+        subject: "Subscription Activated 🎉",
+        message: `Hello ${user.name},\n
+
+Your subscription to the ${plan.name} plan has been activated successfully.\n
+
+Start Date: ${startDate.toDateString()}\n
+End Date: ${endDate.toDateString()}\n
+
+Thank you for using our service.`,
+    })
+
+    return res.status(201).json({
+        "success": true,
+        "message": "Subscription is activated",
+        "plan": plan.name,
+        "expiresAt": endDate.toDateString()
+    });
+}
+
+const use = async (req, res, next) => {
+    const otp = crypto.randomInt(100000, 999999)
+    res.status(200).json({
+        "success": true,
+        "data": `otp number ${otp}`,
+    })
 }
 
 module.exports = {
@@ -101,5 +167,6 @@ module.exports = {
     login,
     register,
     subscribtion,
-    plans
+    plans,
+    use
 };

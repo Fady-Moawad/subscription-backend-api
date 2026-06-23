@@ -4,6 +4,7 @@ const route = express.Router()
 const validate = require('../middleware/validationRegister')
 const limiterLogin = require('../middleware/rateLimoterLogin')
 const { verifyTokenAndAdmin, verifyToken } = require('../middleware/verifyToken')
+const checkSubscribtion = require('../middleware/checkSubscribtion.js')
 const rateLimit = require('../middleware/rateLimoter')
 
 route.route('/')
@@ -16,6 +17,8 @@ route.route('/plans')
     .get(verifyToken, controls.plans)
 route.route('/subscription')
     .post(verifyToken, controls.subscribtion)
+route.route('/use')
+    .post(verifyToken,checkSubscribtion, controls.use)
 
 
 

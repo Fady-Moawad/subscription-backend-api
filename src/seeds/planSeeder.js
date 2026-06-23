@@ -46,8 +46,7 @@ const seedPlans = async () => {
   try {
     await mongoose.connect(process.env.MONGOOSE_URL);
 
-    await Plan.deleteMany(); // يمسح القديم (اختياري)
-
+    await Plan.deleteMany(); 
     await Plan.insertMany(plans);
 
     console.log('Plans seeded successfully 🚀');
