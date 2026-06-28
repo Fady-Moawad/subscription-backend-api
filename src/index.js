@@ -14,7 +14,7 @@ app.use(helmet())
 console.log(process.env.NODE_ENV);
 
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+  app.use(morgan('short'));
 } else {
   app.use(morgan('tiny'));
 }

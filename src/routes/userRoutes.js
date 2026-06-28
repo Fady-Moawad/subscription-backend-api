@@ -17,6 +17,8 @@ route.route('/plans')
     .get(verifyToken, controls.plans)
 route.route('/subscription')
     .post(verifyToken, controls.subscribtion)
+route.route('/upgrade')
+    .post(verifyToken, controls.upgrade)
 route.route('/use')
     .post(verifyToken,checkSubscribtion, controls.use)
 

@@ -1,11 +1,14 @@
 const Users = require('../models/userModel');
-const Plans = require('../models/planSubscription');
+const Plans = require('../models/planModel');
 const Subscribtion = require('../models/userSubscription');
 const bcrypt = require('bcryptjs');
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken');
 const { validationResult } = require("express-validator");
 const sendEmail = require('../utils/nodemailer')
+
+
+
 
 const getAllUsers = async (req, res, next) => {
     try {
@@ -136,12 +139,12 @@ const subscribtion = async (req, res, next) => {
     await sendEmail({
         email: user.email,
         subject: "Subscription Activated 🎉",
-        message: `Hello ${user.name},\n
+        message: `Hello ${user.name},'\n'
 
-Your subscription to the ${plan.name} plan has been activated successfully.\n
+Your subscription to the ${plan.name} plan has been activated successfully.'\n'
 
-Start Date: ${startDate.toDateString()}\n
-End Date: ${endDate.toDateString()}\n
+Start Date: ${startDate.toDateString()}'\n'
+End Date: ${endDate.toDateString()}'\n'
 
 Thank you for using our service.`,
     })
@@ -162,11 +165,77 @@ const use = async (req, res, next) => {
     })
 }
 
+const upgrade = async (req, res, next) => {
+    const user = req.user
+    const { newPlanId } = req.body
+    if (!user.id || !newPlanId) {
+        res.status(400)
+        return next('Plan not found or inactive')
+    }
+    try {
+        const newPaln = await Plans.findById(newPlanId)
+        if (!newPaln) {
+            return res.status(404).json({ data: "Plan not found or inactive" })
+        }
+
+        const currentSub = await Subscribtion.findOne({
+            userId: user.id, status: 'active'
+        })
+
+        if (!currentSub) {
+            res.status(400)
+            return next('you must first choose one paln befor upgrade')
+        }
+
+        if (currentSub.planId.toString() === newPlanId) {
+           
+            res.status(400)
+            return next("Already on this plan")
+        }
+        currentSub.status = 'canceled'
+        await currentSub.save()
+
+        const startDate = new Date()
+        const endDate = new Date()
+        endDate.setDate(startDate.getDate() + newPaln.durationInDays)
+
+        const createSub = await Subscribtion({
+            userId: user.id,
+            planId: newPaln._id,
+            startDate,
+            endDate,
+            status: 'active'
+        })
+        await createSub.save()
+
+        await sendEmail({
+            email: user.email,
+            subject: "Upgrad Subscription is Activated 🎉",
+            message: `Hello ${user.name},\n
+Your subscription to the ${newPaln.name} plan has been activated successfully.\n
+Start Date: ${startDate.toDateString()}\n
+End Date: ${endDate.toDateString()}\n
+Thank you for using our service.`,
+        })
+        return res.status(201).json({
+            success: true,
+            message: "Plan upgraded successfully 🎉",
+            oldPlan: currentSub.planId,
+            newPlan: newPaln.name,
+            expiresAt: endDate.toDateString()
+        })
+    } catch (error) {
+        res.status(400)
+        next(error)
+    }
+}
+
 module.exports = {
     getAllUsers,
     login,
     register,
     subscribtion,
     plans,
-    use
+    use,
+    upgrade
 };
