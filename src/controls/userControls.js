@@ -188,7 +188,7 @@ const upgrade = async (req, res, next) => {
         }
 
         if (currentSub.planId.toString() === newPlanId) {
-           
+
             res.status(400)
             return next("Already on this plan")
         }
@@ -230,6 +230,43 @@ Thank you for using our service.`,
     }
 }
 
+const cancel = async (req, res, next) => {
+    const { name, id, email } = req.user
+    try {
+        const currentSub = await Subscribtion.findOneAndUpdate({ userId: id, status: 'active' }, { $set: { status: 'canceled' } }, { new: true })
+        if (!currentSub) {
+            res.status(404)
+            return next('No active subscription found')
+        }
+
+
+
+        await sendEmail({
+            email,
+            subject: "Subscription Canceled Successfully",
+            message: `Hello ${name},\n
+
+Your subscription has been canceled successfully.\n
+You will continue to have access until:\n
+${currentSub.endDate.toDateString()}\n
+
+Thank you for using our service.`
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: 'Subscription canceled successfully',
+            planId: currentSub.planId,
+            expiresAt: currentSub.endDate
+        })
+
+    } catch (error) {
+        res.status(400)
+        return next(error)
+    }
+
+}
+
 module.exports = {
     getAllUsers,
     login,
@@ -237,5 +274,6 @@ module.exports = {
     subscribtion,
     plans,
     use,
-    upgrade
+    upgrade,
+    cancel
 };

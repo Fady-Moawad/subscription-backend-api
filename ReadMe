@@ -15,3 +15,6 @@
 4) POST /subscribe (planId)
       ↓
 5) Create Subscription
+
+Middleware  → Runtime validation
+Cron Job    → Data integrity

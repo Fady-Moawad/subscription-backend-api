@@ -19,6 +19,8 @@ route.route('/subscription')
     .post(verifyToken, controls.subscribtion)
 route.route('/upgrade')
     .post(verifyToken, controls.upgrade)
+route.route('/cancel')
+    .post(verifyToken, controls.cancel)
 route.route('/use')
     .post(verifyToken,checkSubscribtion, controls.use)
 
