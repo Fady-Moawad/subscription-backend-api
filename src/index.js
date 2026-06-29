@@ -6,6 +6,7 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const { notFound, errorHandler } = require('./middleware/errorHanddling')
+require('./jobs/expireSubscriptions.job.js')
 
 const app = express()
 //securety

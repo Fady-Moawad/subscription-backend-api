@@ -4,7 +4,7 @@ const Subscribtion = require("../models/userSubscription")
 const checkSubscribtion = async (req, res, next) => {
 
     const userId = req.user.id
-    const subscribtion = await Subscribtion.findOne({ userId: userId })
+    const subscribtion = await Subscribtion.findOne({ userId: userId,status:'active' })
 
     const plan = await Plan.findById(subscribtion.planId);
     console.log(plan);
